@@ -17,10 +17,6 @@ let package = Package(
             name: "MetalViewUI",
             dependencies: []
         ),
-        .testTarget(
-            name: "MetalViewUITests",
-            dependencies: ["MetalViewUI"]
-        ),
     ],
     swiftLanguageVersions: [.v5]
 )
