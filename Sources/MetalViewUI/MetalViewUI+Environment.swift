@@ -77,8 +77,8 @@ extension EnvironmentValues {
     }
     
     var enableSetNeedsDisplay: Bool {
-        get { self[IsPausedKey.self] }
-        set { self[IsPausedKey.self] = newValue }
+        get { self[EnableSetNeedsDisplayKey.self] }
+        set { self[EnableSetNeedsDisplayKey.self] = newValue }
     }
     
     var isPaused: Bool {
@@ -87,53 +87,48 @@ extension EnvironmentValues {
     }
     
     var presentWithTransaction: Bool {
-        get { self[IsPausedKey.self] }
-        set { self[IsPausedKey.self] = newValue }
+        get { self[PresentWithTransactionKey.self] }
+        set { self[PresentWithTransactionKey.self] = newValue }
     }
     
 }
 
-extension MetalView {
+public extension View {
     
-    func setEnvironment<V>(_ keyPath: WritableKeyPath<EnvironmentValues, V>, _ value: V) -> Self {
-        _ = self.environment(keyPath, value)
-        return self
-    }
-    
-    func colorPixelFormat(_ value: MTLPixelFormat) -> MetalView {
-        self.setEnvironment(\.colorPixelFormat, value)
+    func colorPixelFormat(_ value: MTLPixelFormat) -> some View {
+        self.environment(\.colorPixelFormat, value)
     }
 
-    func framebufferOnly(_ value: Bool) -> MetalView {
-        self.setEnvironment(\.framebufferOnly, value)
+    func framebufferOnly(_ value: Bool) -> some View {
+        self.environment(\.framebufferOnly, value)
     }
 
-    func drawableSize(_ value: CGSize) -> MetalView {
-        self.setEnvironment(\.drawableSize, value)
+    func drawableSize(_ value: CGSize) -> some View {
+        self.environment(\.drawableSize, value)
     }
 
-    func autoResizeDrawable(_ value: Bool) -> MetalView {
-        self.setEnvironment(\.autoResizeDrawable, value)
+    func autoResizeDrawable(_ value: Bool) -> some View {
+        self.environment(\.autoResizeDrawable, value)
     }
 
-    func clearColor(_ value: MTLClearColor) -> MetalView {
-        self.setEnvironment(\.clearColor, value)
+    func clearColor(_ value: MTLClearColor) -> some View {
+        self.environment(\.clearColor, value)
     }
 
-    func preferredFramesPerSecond(_ value: Int) -> MetalView {
-        self.setEnvironment(\.preferredFramesPerSecond, value)
+    func preferredFramesPerSecond(_ value: Int) -> some View {
+        self.environment(\.preferredFramesPerSecond, value)
     }
 
-    func isPaused(_ value: Bool) -> MetalView {
-        self.setEnvironment(\.isPaused, value)
+    func isPaused(_ value: Bool) -> some View {
+        self.environment(\.isPaused, value)
     }
 
-    func enableSetNeedsDisplay(_ value: Bool) -> MetalView {
-        self.setEnvironment(\.enableSetNeedsDisplay, value)
+    func enableSetNeedsDisplay(_ value: Bool) -> some View {
+        self.environment(\.enableSetNeedsDisplay, value)
     }
 
-    func presentWithTransaction(_ value: Bool) -> MetalView {
-        self.setEnvironment(\.presentWithTransaction, value)
+    func presentWithTransaction(_ value: Bool) -> some View {
+        self.environment(\.presentWithTransaction, value)
     }
     
 }

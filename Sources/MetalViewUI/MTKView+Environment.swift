@@ -12,7 +12,7 @@ extension MTKView {
     
     @discardableResult
     func apply(_ environment: EnvironmentValues) -> Self {
-        
+
         self.colorPixelFormat = environment.colorPixelFormat
         self.framebufferOnly = environment.framebufferOnly
         self.drawableSize = environment.drawableSize
@@ -22,6 +22,11 @@ extension MTKView {
         self.enableSetNeedsDisplay = environment.enableSetNeedsDisplay
         self.isPaused = environment.isPaused
         self.presentsWithTransaction = environment.presentWithTransaction
+        
+        if self.enableSetNeedsDisplay && self.isPaused {
+            self.setNeedsDisplay()
+        }
+
         return self
         
     }
