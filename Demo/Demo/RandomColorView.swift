@@ -11,6 +11,8 @@ import MetalKit
 
 struct RandomColorView: View {
     
+    @State private var delay: Double = 3.0
+    
     let metalDelegate = RandomRenderer()
     let metalDevice = MTLCreateSystemDefaultDevice()!
     
@@ -22,12 +24,22 @@ struct RandomColorView: View {
         #endif
     }()
     
+    init() {
+        self.metalDelegate.delay = self.delay
+    }
+    
     var body: some View {
-        MetalView(device: self.metalDevice, delegate: self.metalDelegate)
-            .preferredFramesPerSecond(60)
-            .framebufferOnly(true)
-            .colorPixelFormat(colorPixelFormat)
-            .padding(10.0)
+        VStack {
+            MetalView(device: self.metalDevice, delegate: self.metalDelegate)
+                .preferredFramesPerSecond(60)
+                .framebufferOnly(true)
+                .colorPixelFormat(colorPixelFormat)
+                .padding(10.0)
+            Text("Frequency: \(Int(delay)) Hz")
+            Slider(value: $delay, in: 1.0 ... 10.0, step: 1.0, label: { Text("Delay") }, minimumValueLabel: { Text("1") }, maximumValueLabel: { Text("10.0") }).padding(10.0).onChange(of: delay, perform: { _ in 
+                self.metalDelegate.delay = self.delay
+            })
+        }
     }
 }
 
@@ -36,6 +48,8 @@ class RandomRenderer: NSObject, MTKViewDelegate {
     private var commandQueue: MTLCommandQueue? = nil
     private var lastTime: CFTimeInterval = 0.0
     private var color: MTLClearColor?
+    
+    var delay: Double = 3.0
     
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) { }
     
@@ -47,7 +61,7 @@ class RandomRenderer: NSObject, MTKViewDelegate {
         
         let currentTime = CACurrentMediaTime()
         
-        if (currentTime - self.lastTime) > 3.0 {
+        if (currentTime - self.lastTime) > self.delay {
             self.color = MTLClearColor(
                 red: .random(in: 0.0 ... 1.0),
                 green: .random(in: 0.0 ... 1.0),
