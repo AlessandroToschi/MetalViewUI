@@ -8,13 +8,15 @@
 import SwiftUI
 import MetalViewUI
 import MetalKit
+import Combine
 
 struct BackgroundColorView: View {
     
     @State private var backgroundColor: Color = Color.yellow
     
-    let metalDelegate = DefaultRenderer()
-    let metalDevice = MTLCreateSystemDefaultDevice()!
+    private let metalDelegate = DefaultRenderer()
+    private let metalDevice = MTLCreateSystemDefaultDevice()!
+    private let setNeedsDisplayTrigger = PassthroughSubject<Void, Never>()
     
     var colorPixelFormat: MTLPixelFormat = {
         #if targetEnvironment(simulator)
@@ -26,14 +28,20 @@ struct BackgroundColorView: View {
     
     var body: some View {
         return VStack {
-            MetalView(device: self.metalDevice, delegate: self.metalDelegate)
+            MetalView(
+                device: self.metalDevice,
+                delegate: self.metalDelegate,
+                setNeedsDisplayTrigger: self.setNeedsDisplayTrigger.eraseToAnyPublisher()
+            )
                 .isPaused(true)
                 .enableSetNeedsDisplay(true)
                 .clearColor(backgroundColor.asMTLClearColor())
                 .framebufferOnly(true)
                 .colorPixelFormat(colorPixelFormat)
                 .padding(10.0)
-            ColorPicker("Choose color:", selection: $backgroundColor).padding(10.0)
+            ColorPicker("Choose color:", selection: $backgroundColor).padding(10.0).onChange(of: backgroundColor, perform: { _ in
+                self.setNeedsDisplayTrigger.send()
+            })
         }
     }
 }
@@ -77,7 +85,6 @@ class DefaultRenderer: NSObject, MTKViewDelegate {
         commandBuffer.present(drawable)
         commandBuffer.commit()
 
-        
     }
     
 }

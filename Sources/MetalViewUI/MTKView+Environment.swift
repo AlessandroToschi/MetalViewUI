@@ -22,11 +22,6 @@ extension MTKView {
         self.enableSetNeedsDisplay = environment.enableSetNeedsDisplay
         self.isPaused = environment.isPaused
         self.presentsWithTransaction = environment.presentWithTransaction
-        
-        if self.enableSetNeedsDisplay && self.isPaused {
-            self.setNeedsDisplay()
-        }
-
         return self
         
     }

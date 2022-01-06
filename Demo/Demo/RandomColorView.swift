@@ -30,15 +30,28 @@ struct RandomColorView: View {
     
     var body: some View {
         VStack {
-            MetalView(device: self.metalDevice, delegate: self.metalDelegate)
+            MetalView(
+                device: self.metalDevice,
+                delegate: self.metalDelegate,
+                setNeedsDisplayTrigger: nil
+            )
                 .preferredFramesPerSecond(60)
                 .framebufferOnly(true)
                 .colorPixelFormat(colorPixelFormat)
                 .padding(10.0)
             Text("Frequency: \(Int(delay)) Hz")
-            Slider(value: $delay, in: 1.0 ... 10.0, step: 1.0, label: { Text("Delay") }, minimumValueLabel: { Text("1") }, maximumValueLabel: { Text("10.0") }).padding(10.0).onChange(of: delay, perform: { _ in 
-                self.metalDelegate.delay = self.delay
-            })
+            Slider(
+                value: $delay,
+                in: 1.0 ... 10.0,
+                step: 1.0,
+                label: { Text("Delay") },
+                minimumValueLabel: { Text("1") },
+                maximumValueLabel: { Text("10.0") }
+            )
+                .padding(10.0)
+                .onChange(of: delay, perform: { _ in
+                    self.metalDelegate.delay = self.delay
+                })
         }
     }
 }
@@ -85,9 +98,7 @@ class RandomRenderer: NSObject, MTKViewDelegate {
         commandBuffer.commit()
         
     }
-    
 
-    
 }
 
 struct RandomColorView_Previews: PreviewProvider {
