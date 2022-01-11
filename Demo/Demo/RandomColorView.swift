@@ -30,10 +30,11 @@ struct RandomColorView: View {
     
     var body: some View {
         VStack {
-            MetalView(
-                device: self.metalDevice,
-                delegate: self.metalDelegate,
-                setNeedsDisplayTrigger: nil
+            MetalView<Void>(
+                metalDevice: self.metalDevice,
+                drawableSizeWillChangeCallback: nil,
+                drawCallback: self.metalDelegate.drawMetalView(content:view:commandQueue:),
+                contentTrigger: nil
             )
                 .preferredFramesPerSecond(60)
                 .framebufferOnly(true)
@@ -54,24 +55,18 @@ struct RandomColorView: View {
                 })
         }
     }
+    
 }
 
-class RandomRenderer: NSObject, MTKViewDelegate {
+class RandomRenderer {
     
-    private var commandQueue: MTLCommandQueue? = nil
     private var lastTime: CFTimeInterval = 0.0
     private var color: MTLClearColor?
     
     var delay: Double = 3.0
-    
-    func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) { }
-    
-    func draw(in view: MTKView) {
         
-        if self.commandQueue == nil {
-            self.commandQueue = view.device?.makeCommandQueue()
-        }
-        
+    func drawMetalView(content: Void?, view: MTKView, commandQueue: MTLCommandQueue?) {
+
         let currentTime = CACurrentMediaTime()
         
         if (currentTime - self.lastTime) > self.delay {
@@ -86,12 +81,12 @@ class RandomRenderer: NSObject, MTKViewDelegate {
         
         let currentRenderPassDescriptor = view.currentRenderPassDescriptor
         currentRenderPassDescriptor?.colorAttachments[0].clearColor = self.color ?? view.clearColor
-                                
+        
         guard let commandQueue = commandQueue,
-        let commandBuffer = commandQueue.makeCommandBuffer(),
-        let renderPassDescriptor = currentRenderPassDescriptor,
-        let renderCommandEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor),
-        let drawable = view.currentDrawable else { return }
+              let commandBuffer = commandQueue.makeCommandBuffer(),
+              let renderPassDescriptor = currentRenderPassDescriptor,
+              let renderCommandEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor),
+              let drawable = view.currentDrawable else { return }
         
         renderCommandEncoder.endEncoding()
         commandBuffer.present(drawable)

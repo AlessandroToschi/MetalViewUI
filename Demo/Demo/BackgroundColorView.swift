@@ -29,9 +29,10 @@ struct BackgroundColorView: View {
     var body: some View {
         return VStack {
             MetalView(
-                device: self.metalDevice,
-                delegate: self.metalDelegate,
-                setNeedsDisplayTrigger: self.setNeedsDisplayTrigger.eraseToAnyPublisher()
+                metalDevice: self.metalDevice,
+                drawableSizeWillChangeCallback: nil,
+                drawCallback: nil,
+                contentTrigger: self.setNeedsDisplayTrigger.eraseToAnyPublisher()
             )
                 .isPaused(true)
                 .enableSetNeedsDisplay(true)
