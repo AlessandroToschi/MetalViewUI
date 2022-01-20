@@ -3,6 +3,14 @@ import MetalKit
 import Combine
 
 public struct MetalView<C>: UIViewRepresentable {
+
+    public enum DrawingMode {
+        
+        case timeUpdates(preferredFramesPerSecond: Int)
+        case drawNotifications(setNeedsDisplayTrigger: AnyPublisher<Void, Never>)
+        case explicitDrawing
+        
+    }
     
     public typealias DrawCallback = (C?, MTKView, MTLCommandQueue?) -> Void
     public typealias DrawableSizeWillChangeCallback = (C?, MTKView, CGSize, MTLCommandQueue?) -> Void

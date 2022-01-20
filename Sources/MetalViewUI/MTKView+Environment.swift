@@ -15,7 +15,9 @@ extension MTKView {
 
         self.colorPixelFormat = environment.colorPixelFormat
         self.framebufferOnly = environment.framebufferOnly
-        self.drawableSize = environment.drawableSize
+        if let drawableSize = environment.drawableSize {
+            self.drawableSize = drawableSize
+        }
         self.autoResizeDrawable = environment.autoResizeDrawable
         self.clearColor = environment.clearColor
         self.preferredFramesPerSecond = environment.preferredFramesPerSecond
