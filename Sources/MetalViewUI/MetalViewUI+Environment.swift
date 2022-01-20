@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MetalKit
+import Combine
 
 private struct ColorPixelFormatKey: EnvironmentKey {
     static let defaultValue: MTLPixelFormat = .bgra8Unorm
@@ -17,7 +18,7 @@ private struct FramebufferOnlyKey: EnvironmentKey {
 }
 
 private struct DrawableSizeKey: EnvironmentKey {
-    static var defaultValue: CGSize = .zero
+    static var defaultValue: CGSize? = nil
 }
 
 private struct AutoResizeDrawableKey: EnvironmentKey {
@@ -44,6 +45,10 @@ private struct PresentWithTransactionKey: EnvironmentKey {
     static var defaultValue: Bool = false
 }
 
+private struct SetNeedsDisplayTriggerKey: EnvironmentKey {
+    static var defaultValue: AnyPublisher<Void, Never>? = nil
+}
+
 extension EnvironmentValues {
     
     var colorPixelFormat: MTLPixelFormat {
@@ -56,7 +61,7 @@ extension EnvironmentValues {
         set { self[FramebufferOnlyKey.self] = newValue }
     }
     
-    var drawableSize: CGSize {
+    var drawableSize: CGSize? {
         get { self[DrawableSizeKey.self] }
         set { self[DrawableSizeKey.self] = newValue }
     }
@@ -91,6 +96,11 @@ extension EnvironmentValues {
         set { self[PresentWithTransactionKey.self] = newValue }
     }
     
+    var setNeedsDisplayTrigger: AnyPublisher<Void, Never>? {
+        get { self[SetNeedsDisplayTriggerKey.self] }
+        set { self[SetNeedsDisplayTriggerKey.self] = newValue }
+    }
+    
 }
 
 public extension View {
@@ -103,7 +113,7 @@ public extension View {
         self.environment(\.framebufferOnly, value)
     }
 
-    func drawableSize(_ value: CGSize) -> some View {
+    func drawableSize(_ value: CGSize?) -> some View {
         self.environment(\.drawableSize, value)
     }
 
@@ -129,6 +139,28 @@ public extension View {
 
     func presentWithTransaction(_ value: Bool) -> some View {
         self.environment(\.presentWithTransaction, value)
+    }
+    
+    func setNeedsDisplayTrigger(_ value: AnyPublisher<Void, Never>) -> some View {
+        self.environment(\.setNeedsDisplayTrigger, value)
+    }
+    
+    @ViewBuilder
+    func drawingMode(_ value: MetalView.DrawingMode) -> some View {
+        
+        switch value {
+                
+            case .timeUpdates(let preferredFramesPerSecond):
+                self.isPaused(false).enableSetNeedsDisplay(false).preferredFramesPerSecond(preferredFramesPerSecond)
+                
+            case .drawNotifications(let setNeedsDisplayTrigger):
+                self.isPaused(true).enableSetNeedsDisplay(true).setNeedsDisplayTrigger(setNeedsDisplayTrigger)
+                
+            case .explicitDrawing:
+                self.isPaused(true).enableSetNeedsDisplay(false)
+                
+        }
+        
     }
     
 }
