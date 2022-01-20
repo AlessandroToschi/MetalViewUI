@@ -42,7 +42,9 @@ pod 'MetalViewUI', :git => 'https://github.com/AlessandroToschi/MetalViewUI.git'
 
 ### Swift Package Manager
 
-`File --> Add packages...` and paste the following link: `https://github.com/AlessandroToschi/MetalViewUI`
+`Xcode --> File --> Add packages...` and paste the following link: `https://github.com/AlessandroToschi/MetalViewUI`
+or
+`.Package(url: "https://github.com/AlessandroToschi/MetalViewUI", branch: "main")`
 
 ## Demo
 
