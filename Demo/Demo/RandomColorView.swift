@@ -13,8 +13,8 @@ struct RandomColorView: View {
     
     @State private var delay: Double = 3.0
     
-    let metalDelegate = RandomRenderer()
-    let metalDevice = MTLCreateSystemDefaultDevice()!
+    private let metalDevice: MTLDevice?
+    private let randomRendered: RandomRenderer
     
     var colorPixelFormat: MTLPixelFormat = {
         #if targetEnvironment(simulator)
@@ -24,21 +24,23 @@ struct RandomColorView: View {
         #endif
     }()
     
-    init() {
-        self.metalDelegate.delay = self.delay
+    init(metalDevice: MTLDevice?) {
+        
+        self.metalDevice = metalDevice
+        self.randomRendered = RandomRenderer()
+        
     }
     
     var body: some View {
         VStack {
-            MetalView<Void>(
+            MetalView(
                 metalDevice: self.metalDevice,
                 drawableSizeWillChangeCallback: nil,
-                drawCallback: self.metalDelegate.drawMetalView(content:view:commandQueue:),
-                contentTrigger: nil
+                drawCallback: self.randomRendered.drawMetalView(view:commandQueue:)
             )
-                .preferredFramesPerSecond(60)
+                .drawingMode(.timeUpdates(preferredFramesPerSecond: 60))
                 .framebufferOnly(true)
-                .colorPixelFormat(colorPixelFormat)
+                .colorPixelFormat(self.colorPixelFormat)
                 .padding(10.0)
             Text("Frequency: \(Int(delay)) Hz")
             Slider(
@@ -51,7 +53,7 @@ struct RandomColorView: View {
             )
                 .padding(10.0)
                 .onChange(of: delay, perform: { _ in
-                    self.metalDelegate.delay = self.delay
+                    self.randomRendered.delay = self.delay
                 })
         }
     }
@@ -65,7 +67,7 @@ class RandomRenderer {
     
     var delay: Double = 3.0
         
-    func drawMetalView(content: Void?, view: MTKView, commandQueue: MTLCommandQueue?) {
+    func drawMetalView(view: MTKView, commandQueue: MTLCommandQueue?) {
 
         let currentTime = CACurrentMediaTime()
         
@@ -94,10 +96,4 @@ class RandomRenderer {
         
     }
 
-}
-
-struct RandomColorView_Previews: PreviewProvider {
-    static var previews: some View {
-        RandomColorView()
-    }
 }

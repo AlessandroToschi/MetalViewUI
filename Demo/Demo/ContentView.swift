@@ -8,14 +8,17 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    let metalDevice = MTLCreateSystemDefaultDevice()!
+    
     var body: some View {
         TabView {
-            BackgroundColorView()
+            BackgroundColorView(metalDevice: self.metalDevice)
                 .tabItem {
                     Image(systemName: "1.square.fill")
                     Text("Background Color")
                 }
-            RandomColorView()
+            RandomColorView(metalDevice: self.metalDevice)
                 .tabItem {
                     Image(systemName: "1.circle.fill")
                     Text("Random Color")

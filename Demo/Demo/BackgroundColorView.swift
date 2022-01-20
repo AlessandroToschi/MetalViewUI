@@ -14,9 +14,8 @@ struct BackgroundColorView: View {
     
     @State private var backgroundColor: Color = Color.yellow
     
-    private let metalDelegate = DefaultRenderer()
-    private let metalDevice = MTLCreateSystemDefaultDevice()!
-    private let setNeedsDisplayTrigger = PassthroughSubject<Void, Never>()
+    private let metalDevice: MTLDevice?
+    private let setNeedsDisplayTrigger: CurrentValueSubject<Void, Never>
     
     var colorPixelFormat: MTLPixelFormat = {
         #if targetEnvironment(simulator)
@@ -26,16 +25,19 @@ struct BackgroundColorView: View {
         #endif
     }()
     
+    public init(metalDevice: MTLDevice?) {
+        self.metalDevice = metalDevice
+        self.setNeedsDisplayTrigger = CurrentValueSubject<Void, Never>(())
+    }
+    
     var body: some View {
         return VStack {
             MetalView(
                 metalDevice: self.metalDevice,
                 drawableSizeWillChangeCallback: nil,
-                drawCallback: nil,
-                contentTrigger: self.setNeedsDisplayTrigger.eraseToAnyPublisher()
+                drawCallback: nil
             )
-                .isPaused(true)
-                .enableSetNeedsDisplay(true)
+                .drawingMode(.drawNotifications(setNeedsDisplayTrigger: self.setNeedsDisplayTrigger.eraseToAnyPublisher()))
                 .clearColor(backgroundColor.asMTLClearColor())
                 .framebufferOnly(true)
                 .colorPixelFormat(colorPixelFormat)
@@ -62,36 +64,4 @@ extension Color {
         
     }
     
-}
-
-class DefaultRenderer: NSObject, MTKViewDelegate {
-    
-    var commandQueue: MTLCommandQueue?
-    
-    func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) { }
-    
-    func draw(in view: MTKView) {
-        
-        if self.commandQueue == nil {
-            self.commandQueue = view.device?.makeCommandQueue()
-        }
-                        
-        guard let commandQueue = commandQueue,
-        let commandBuffer = commandQueue.makeCommandBuffer(),
-        let renderPassDescriptor = view.currentRenderPassDescriptor,
-        let renderCommandEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor),
-        let drawable = view.currentDrawable else { return }
-        
-        renderCommandEncoder.endEncoding()
-        commandBuffer.present(drawable)
-        commandBuffer.commit()
-
-    }
-    
-}
-
-struct BackgroundColorView_Previews: PreviewProvider {
-    static var previews: some View {
-        BackgroundColorView()
-    }
 }

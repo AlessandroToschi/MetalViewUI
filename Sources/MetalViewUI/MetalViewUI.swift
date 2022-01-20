@@ -2,7 +2,7 @@ import SwiftUI
 import MetalKit
 import Combine
 
-public struct MetalView<C>: UIViewRepresentable {
+public struct MetalView: UIViewRepresentable {
 
     public enum DrawingMode {
         
@@ -12,27 +12,24 @@ public struct MetalView<C>: UIViewRepresentable {
         
     }
     
-    public typealias DrawCallback = (C?, MTKView, MTLCommandQueue?) -> Void
-    public typealias DrawableSizeWillChangeCallback = (C?, MTKView, CGSize, MTLCommandQueue?) -> Void
+    public typealias DrawCallback = (MTKView, MTLCommandQueue?) -> Void
+    public typealias DrawableSizeWillChangeCallback = (MTKView, CGSize, MTLCommandQueue?) -> Void
 
     public typealias UIViewType = MTKView
     
     private let metalDevice: MTLDevice?
     private let drawableSizeWillChangeCallback: DrawableSizeWillChangeCallback?
     private let drawCallback: DrawCallback?
-    private let contentTrigger: AnyPublisher<C, Never>?
     
     public init(
         metalDevice: MTLDevice?,
         drawableSizeWillChangeCallback: DrawableSizeWillChangeCallback?,
-        drawCallback: DrawCallback?,
-        contentTrigger: AnyPublisher<C, Never>?
+        drawCallback: DrawCallback?
     ) {
         
         self.metalDevice = metalDevice
         self.drawableSizeWillChangeCallback = drawableSizeWillChangeCallback
         self.drawCallback = drawCallback
-        self.contentTrigger = contentTrigger
         
     }
     
@@ -40,74 +37,70 @@ public struct MetalView<C>: UIViewRepresentable {
         Coordinator(
             metalDevice: self.metalDevice,
             drawableSizeWillChangeCallback: self.drawableSizeWillChangeCallback,
-            drawCallback: self.drawCallback,
-            contentTrigger: self.contentTrigger
+            drawCallback: self.drawCallback
         )
     }
     
     public func makeUIView(context: Context) -> MTKView {
         context.coordinator.metalView.apply(context.environment)
+        context.coordinator.setNeedsDisplayTrigger = context.environment.setNeedsDisplayTrigger
+        return context.coordinator.metalView
     }
     
     public func updateUIView(_ uiView: MTKView, context: Context) {
-        uiView.apply(context.environment)
+        context.coordinator.metalView.apply(context.environment)
+        context.coordinator.setNeedsDisplayTrigger = context.environment.setNeedsDisplayTrigger
     }
     
     public class Coordinator: NSObject, MTKViewDelegate {
-                
-        let metalDevice: MTLDevice?
-        let drawableSizeWillChangeCallback: DrawableSizeWillChangeCallback?
-        let drawCallback: DrawCallback?
+        
         let metalView: MTKView
         let commandQueue: MTLCommandQueue?
+        
+        let drawableSizeWillChangeCallback: DrawableSizeWillChangeCallback?
+        let drawCallback: DrawCallback?
+
         var cancellable: AnyCancellable?
-        var content: C?
+        var setNeedsDisplayTrigger: AnyPublisher<Void, Never>? {
+            didSet {
+                if let setNeedsDisplayTrigger = self.setNeedsDisplayTrigger {
+                    self.cancellable = setNeedsDisplayTrigger.sink { [weak self] in
+                        if let self = self, self.metalView.enableSetNeedsDisplay, self.metalView.isPaused {
+                            self.metalView.setNeedsDisplay()
+                        }
+                    }
+                }
+            }
+        }
         
         public init(
             metalDevice: MTLDevice?,
             drawableSizeWillChangeCallback: DrawableSizeWillChangeCallback?,
-            drawCallback: DrawCallback?,
-            contentTrigger: AnyPublisher<C, Never>?
+            drawCallback: DrawCallback?
         ) {
             
-            self.metalDevice = metalDevice
+            self.commandQueue = metalDevice?.makeCommandQueue()
+            self.metalView = MTKView(frame: .zero, device: metalDevice)
+
             self.drawableSizeWillChangeCallback = drawableSizeWillChangeCallback
             self.drawCallback = drawCallback
-            self.metalView = MTKView(frame: .zero, device: metalDevice)
-            self.commandQueue = metalDevice?.makeCommandQueue()
+            
             self.cancellable = nil
             
             super.init()
             
             self.metalView.delegate = self
             
-            if let contentTrigger = contentTrigger{
-                
-                self.cancellable = contentTrigger.receive(on: DispatchQueue.main).sink { [weak self] content in
-                    
-                    guard let self = self else { return }
-                    
-                    self.content = content
-                    
-                    if self.metalView.enableSetNeedsDisplay && self.metalView.isPaused {
-                        self.metalView.setNeedsDisplay()
-                    }
-                    
-                }
-                
-            }
-            
-            
         }
         
         public func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
-            self.drawableSizeWillChangeCallback?(self.content, view, size, self.commandQueue);
+            self.drawableSizeWillChangeCallback?(view, size, self.commandQueue);
         }
         
         public func draw(in view: MTKView) {
             
             if let drawCallback = drawCallback {
-                drawCallback(self.content, view, self.commandQueue)
+                drawCallback(view, self.commandQueue)
             } else {
                 
                 guard let commandQueue = self.commandQueue,
