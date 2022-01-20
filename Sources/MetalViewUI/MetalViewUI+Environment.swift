@@ -156,9 +156,6 @@ public extension View {
             case .drawNotifications(let setNeedsDisplayTrigger):
                 self.isPaused(true).enableSetNeedsDisplay(true).setNeedsDisplayTrigger(setNeedsDisplayTrigger)
                 
-            case .explicitDrawing:
-                self.isPaused(true).enableSetNeedsDisplay(false)
-                
         }
         
     }

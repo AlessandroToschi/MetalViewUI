@@ -8,7 +8,6 @@ public struct MetalView: UIViewRepresentable {
         
         case timeUpdates(preferredFramesPerSecond: Int)
         case drawNotifications(setNeedsDisplayTrigger: AnyPublisher<Void, Never>)
-        case explicitDrawing
         
     }
     
