@@ -146,7 +146,7 @@ public extension View {
     }
     
     @ViewBuilder
-    func drawingMode(_ value: MetalView.DrawingMode) -> some View {
+    func drawingMode(_ value: MetalViewUI.DrawingMode) -> some View {
         
         switch value {
                 

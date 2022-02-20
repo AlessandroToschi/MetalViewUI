@@ -12,10 +12,11 @@ import Combine
 
 struct BackgroundColorView: View {
     
-    @State private var backgroundColor: Color = Color.yellow
+    @State private var backgroundColor: Color
     
-    private let metalDevice: MTLDevice?
+    private let metalDevice: MTLDevice
     private let setNeedsDisplayTrigger: CurrentValueSubject<Void, Never>
+    private let solidColorRenderer: SolidColorRenderer
     
     var colorPixelFormat: MTLPixelFormat = {
         #if targetEnvironment(simulator)
@@ -25,25 +26,35 @@ struct BackgroundColorView: View {
         #endif
     }()
     
-    public init(metalDevice: MTLDevice?) {
+    public init(metalDevice: MTLDevice) {
+        
+        self.backgroundColor = .yellow
         self.metalDevice = metalDevice
         self.setNeedsDisplayTrigger = CurrentValueSubject<Void, Never>(())
+        self.solidColorRenderer = SolidColorRenderer(
+            commandQueue: metalDevice.makeCommandQueue(),
+            solidColor: .yellow
+        )
+        
     }
     
     var body: some View {
         return VStack {
-            MetalView(
+            MetalViewUI(
                 metalDevice: self.metalDevice,
-                drawableSizeWillChangeCallback: nil,
-                drawCallback: nil
+                renderer: self.solidColorRenderer
             )
                 .drawingMode(.drawNotifications(setNeedsDisplayTrigger: self.setNeedsDisplayTrigger.eraseToAnyPublisher()))
-                .clearColor(backgroundColor.asMTLClearColor())
                 .framebufferOnly(true)
                 .colorPixelFormat(colorPixelFormat)
                 .padding(10.0)
-            ColorPicker("Choose color:", selection: $backgroundColor).padding(10.0).onChange(of: backgroundColor, perform: { _ in
-                self.setNeedsDisplayTrigger.send()
+            ColorPicker("Choose color:", selection: $backgroundColor)
+                .padding(10.0)
+                .onChange(of: backgroundColor, perform: { color in
+                    
+                    self.setNeedsDisplayTrigger.send()
+                    self.solidColorRenderer.solidColor = color
+                    
             })
         }
     }
@@ -61,6 +72,40 @@ extension Color {
         guard UIColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha) else { return MTLClearColorMake(0.0, 0.0, 0.0, 1.0) }
         
         return MTLClearColorMake(red, green, blue, alpha)
+        
+    }
+    
+}
+
+class SolidColorRenderer: NSObject, MTKViewDelegate {
+    
+    public var solidColor: Color
+    
+    private var commandQueue: MTLCommandQueue?
+    
+    public init(commandQueue: MTLCommandQueue? = nil, solidColor: Color = .clear) {
+        
+        self.commandQueue = commandQueue
+        self.solidColor = solidColor
+        
+    }
+    
+    func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) { }
+    
+    func draw(in view: MTKView) {
+        
+        let currentRenderPassDescriptor = view.currentRenderPassDescriptor
+        currentRenderPassDescriptor?.colorAttachments[0].clearColor = self.solidColor.asMTLClearColor()
+        
+        guard let commandQueue = commandQueue,
+              let commandBuffer = commandQueue.makeCommandBuffer(),
+              let renderPassDescriptor = currentRenderPassDescriptor,
+              let renderCommandEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor),
+              let drawable = view.currentDrawable else { return }
+        
+        renderCommandEncoder.endEncoding()
+        commandBuffer.present(drawable)
+        commandBuffer.commit()
         
     }
     
