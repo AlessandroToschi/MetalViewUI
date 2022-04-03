@@ -11,25 +11,18 @@ import MetalKit
 
 struct RandomColorView: View {
     
-    @State private var delay: Double
-    
     private let metalDevice: MTLDevice
-    private let randomColorRenderer: RandomColorRenderer
-    
-    var colorPixelFormat: MTLPixelFormat = {
-        #if targetEnvironment(simulator)
-        return .bgra8Unorm
-        #else
-        return (UIScreen.main.traitCollection.displayGamut == .P3) ? .bgra10_xr : .bgra8Unorm
-        #endif
-    }()
-    
+    @StateObject private var randomColorRenderer: RandomColorRenderer
+
     init(metalDevice: MTLDevice) {
-        
-        self.delay = 3.0
-        
+
         self.metalDevice = metalDevice
-        self.randomColorRenderer = RandomColorRenderer(commandQueue: metalDevice.makeCommandQueue())
+        self._randomColorRenderer = StateObject(
+            wrappedValue: RandomColorRenderer(
+                delay: 3.0,
+                commandQueue: metalDevice.makeCommandQueue()
+            )
+        )
         
     }
     
@@ -41,11 +34,10 @@ struct RandomColorView: View {
             )
                 .drawingMode(.timeUpdates(preferredFramesPerSecond: 120))
                 .framebufferOnly(true)
-                .colorPixelFormat(self.colorPixelFormat)
                 .padding(10.0)
-            Text("Frequency: \(Int(delay)) Hz")
+            Text("Frequency: \(Int(self.randomColorRenderer.delay)) Hz")
             Slider(
-                value: $delay,
+                value: $randomColorRenderer.delay,
                 in: 1.0 ... 10.0,
                 step: 1.0,
                 label: { Text("Delay") },
@@ -53,23 +45,20 @@ struct RandomColorView: View {
                 maximumValueLabel: { Text("10.0") }
             )
                 .padding(10.0)
-                .onChange(of: delay, perform: { delay in
-                    self.randomColorRenderer.delay = delay
-                })
         }
     }
     
 }
 
-class RandomColorRenderer: NSObject, MTKViewDelegate {
+class RandomColorRenderer: NSObject, MTKViewDelegate, ObservableObject {
     
-    public var delay: Double
+    @Published public var delay: Double
     
     private var commandQueue: MTLCommandQueue?
     private var lastTime: CFTimeInterval
     private var color: MTLClearColor
     
-    public init(commandQueue: MTLCommandQueue?, delay: Double = 3.0) {
+    public init(delay: Double, commandQueue: MTLCommandQueue?) {
         
         self.delay = delay
         

@@ -12,28 +12,18 @@ import Combine
 
 struct BackgroundColorView: View {
     
-    @State private var backgroundColor: Color
-    
     private let metalDevice: MTLDevice
-    private let setNeedsDisplayTrigger: CurrentValueSubject<Void, Never>
-    private let solidColorRenderer: SolidColorRenderer
     
-    var colorPixelFormat: MTLPixelFormat = {
-        #if targetEnvironment(simulator)
-        return .bgra8Unorm
-        #else
-        return (UIScreen.main.traitCollection.displayGamut == .P3) ? .bgra10_xr : .bgra8Unorm
-        #endif
-    }()
+    @StateObject private var solidColorRenderer: SolidColorRenderer
     
     public init(metalDevice: MTLDevice) {
         
-        self.backgroundColor = .yellow
         self.metalDevice = metalDevice
-        self.setNeedsDisplayTrigger = CurrentValueSubject<Void, Never>(())
-        self.solidColorRenderer = SolidColorRenderer(
-            commandQueue: metalDevice.makeCommandQueue(),
-            solidColor: .yellow
+        self._solidColorRenderer = StateObject(
+            wrappedValue: SolidColorRenderer(
+                commandQueue: metalDevice.makeCommandQueue(),
+                solidColor: .yellow
+            )
         )
         
     }
@@ -44,18 +34,13 @@ struct BackgroundColorView: View {
                 metalDevice: self.metalDevice,
                 renderer: self.solidColorRenderer
             )
-                .drawingMode(.drawNotifications(setNeedsDisplayTrigger: self.setNeedsDisplayTrigger.eraseToAnyPublisher()))
-                .framebufferOnly(true)
-                .colorPixelFormat(colorPixelFormat)
+                .drawingMode(.drawNotifications(setNeedsDisplayTrigger: nil))
                 .padding(10.0)
-            ColorPicker("Choose color:", selection: $backgroundColor)
+            ColorPicker(
+                "Choose color:",
+                selection: $solidColorRenderer.solidColor
+            )
                 .padding(10.0)
-                .onChange(of: backgroundColor, perform: { color in
-                    
-                    self.setNeedsDisplayTrigger.send()
-                    self.solidColorRenderer.solidColor = color
-                    
-            })
         }
     }
 }
@@ -77,9 +62,9 @@ extension Color {
     
 }
 
-class SolidColorRenderer: NSObject, MTKViewDelegate {
+class SolidColorRenderer: NSObject, MTKViewDelegate, ObservableObject {
     
-    public var solidColor: Color
+    @Published public var solidColor: Color
     
     private var commandQueue: MTLCommandQueue?
     

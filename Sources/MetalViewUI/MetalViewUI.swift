@@ -7,7 +7,7 @@ public struct MetalViewUI: UIViewRepresentable {
     public enum DrawingMode {
         
         case timeUpdates(preferredFramesPerSecond: Int)
-        case drawNotifications(setNeedsDisplayTrigger: AnyPublisher<Void, Never>)
+        case drawNotifications(setNeedsDisplayTrigger: AnyPublisher<Void, Never>?)
         
     }
 

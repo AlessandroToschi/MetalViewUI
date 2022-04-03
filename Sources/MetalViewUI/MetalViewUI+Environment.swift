@@ -141,7 +141,7 @@ public extension View {
         self.environment(\.presentWithTransaction, value)
     }
     
-    func setNeedsDisplayTrigger(_ value: AnyPublisher<Void, Never>) -> some View {
+    func setNeedsDisplayTrigger(_ value: AnyPublisher<Void, Never>?) -> some View {
         self.environment(\.setNeedsDisplayTrigger, value)
     }
     
@@ -154,7 +154,7 @@ public extension View {
                 self.isPaused(false).enableSetNeedsDisplay(false).preferredFramesPerSecond(preferredFramesPerSecond)
                 
             case .drawNotifications(let setNeedsDisplayTrigger):
-                self.isPaused(true).enableSetNeedsDisplay(true).setNeedsDisplayTrigger(setNeedsDisplayTrigger)
+                self.isPaused(true).enableSetNeedsDisplay(true).setNeedsDisplayTrigger(nil)
                 
         }
         
