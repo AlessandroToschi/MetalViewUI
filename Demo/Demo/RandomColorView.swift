@@ -13,9 +13,9 @@ struct RandomColorView: View {
     
     private let metalDevice: MTLDevice
     @StateObject private var randomColorRenderer: RandomColorRenderer
-
+    
     init(metalDevice: MTLDevice) {
-
+        
         self.metalDevice = metalDevice
         self._randomColorRenderer = StateObject(
             wrappedValue: RandomColorRenderer(
@@ -32,9 +32,9 @@ struct RandomColorView: View {
                 metalDevice: self.metalDevice,
                 renderer: self.randomColorRenderer
             )
-                .drawingMode(.timeUpdates(preferredFramesPerSecond: 120))
-                .framebufferOnly(true)
-                .padding(10.0)
+            .drawingMode(.timeUpdates(preferredFramesPerSecond: 120))
+            .framebufferOnly(true)
+            .padding(10.0)
             Text("Frequency: \(Int(self.randomColorRenderer.delay)) Hz")
             Slider(
                 value: $randomColorRenderer.delay,
@@ -44,7 +44,7 @@ struct RandomColorView: View {
                 minimumValueLabel: { Text("1") },
                 maximumValueLabel: { Text("10.0") }
             )
-                .padding(10.0)
+            .padding(10.0)
         }
     }
     
@@ -101,5 +101,5 @@ class RandomColorRenderer: NSObject, MTKViewDelegate, ObservableObject {
         commandBuffer.commit()
         
     }
-
+    
 }

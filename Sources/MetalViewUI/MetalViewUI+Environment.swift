@@ -46,7 +46,7 @@ private struct PresentWithTransactionKey: EnvironmentKey {
 }
 
 private struct SetNeedsDisplayTriggerKey: EnvironmentKey {
-    static var defaultValue: AnyPublisher<Void, Never>? = nil
+    static var defaultValue: MetalViewUI.SetNeedsDisplayTrigger? = nil
 }
 
 extension EnvironmentValues {
@@ -96,7 +96,7 @@ extension EnvironmentValues {
         set { self[PresentWithTransactionKey.self] = newValue }
     }
     
-    var setNeedsDisplayTrigger: AnyPublisher<Void, Never>? {
+    var setNeedsDisplayTrigger: MetalViewUI.SetNeedsDisplayTrigger? {
         get { self[SetNeedsDisplayTriggerKey.self] }
         set { self[SetNeedsDisplayTriggerKey.self] = newValue }
     }
@@ -141,7 +141,7 @@ public extension View {
         self.environment(\.presentWithTransaction, value)
     }
     
-    func setNeedsDisplayTrigger(_ value: AnyPublisher<Void, Never>?) -> some View {
+    func setNeedsDisplayTrigger(_ value: MetalViewUI.SetNeedsDisplayTrigger?) -> some View {
         self.environment(\.setNeedsDisplayTrigger, value)
     }
     
@@ -154,7 +154,7 @@ public extension View {
                 self.isPaused(false).enableSetNeedsDisplay(false).preferredFramesPerSecond(preferredFramesPerSecond)
                 
             case .drawNotifications(let setNeedsDisplayTrigger):
-                self.isPaused(true).enableSetNeedsDisplay(true).setNeedsDisplayTrigger(nil)
+                self.isPaused(true).enableSetNeedsDisplay(true).setNeedsDisplayTrigger(setNeedsDisplayTrigger)
                 
         }
         

@@ -34,13 +34,13 @@ struct BackgroundColorView: View {
                 metalDevice: self.metalDevice,
                 renderer: self.solidColorRenderer
             )
-                .drawingMode(.drawNotifications(setNeedsDisplayTrigger: nil))
-                .padding(10.0)
+            .drawingMode(.drawNotifications(setNeedsDisplayTrigger: self.solidColorRenderer.setNeedsDisplayTrigger))
+            .padding(10.0)
             ColorPicker(
                 "Choose color:",
                 selection: $solidColorRenderer.solidColor
             )
-                .padding(10.0)
+            .padding(10.0)
         }
     }
 }
@@ -64,14 +64,25 @@ extension Color {
 
 class SolidColorRenderer: NSObject, MTKViewDelegate, ObservableObject {
     
-    @Published public var solidColor: Color
+    @Published public var solidColor: Color {
+        didSet {
+            self.setNeedsDisplayPublisher.send()
+        }
+    }
+    
+    public var setNeedsDisplayTrigger: AnyPublisher<Void, Never> {
+        self.setNeedsDisplayPublisher.eraseToAnyPublisher()
+    }
     
     private var commandQueue: MTLCommandQueue?
+    private var setNeedsDisplayPublisher: CurrentValueSubject<Void, Never>
     
     public init(commandQueue: MTLCommandQueue? = nil, solidColor: Color = .clear) {
         
-        self.commandQueue = commandQueue
         self.solidColor = solidColor
+        self.setNeedsDisplayPublisher = CurrentValueSubject<Void, Never>(())
+        
+        self.commandQueue = commandQueue
         
     }
     

@@ -3,11 +3,13 @@ import MetalKit
 import Combine
 
 public struct MetalViewUI: UIViewRepresentable {
+    
+    public typealias SetNeedsDisplayTrigger = AnyPublisher<Void, Never>
 
     public enum DrawingMode {
         
         case timeUpdates(preferredFramesPerSecond: Int)
-        case drawNotifications(setNeedsDisplayTrigger: AnyPublisher<Void, Never>?)
+        case drawNotifications(setNeedsDisplayTrigger: SetNeedsDisplayTrigger?)
         
     }
 
@@ -43,7 +45,7 @@ public struct MetalViewUI: UIViewRepresentable {
         
         context.coordinator.metalView.apply(context.environment)
         context.coordinator.setNeedsDisplayTrigger = context.environment.setNeedsDisplayTrigger
-        
+        print("UPDATE VIEW")
     }
     
     public class Coordinator {
@@ -54,7 +56,7 @@ public struct MetalViewUI: UIViewRepresentable {
             MTKView(frame: .zero)
         }()
         
-        public var setNeedsDisplayTrigger: AnyPublisher<Void, Never>? {
+        public var setNeedsDisplayTrigger: SetNeedsDisplayTrigger? {
             
             didSet {
                 
