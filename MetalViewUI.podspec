@@ -7,6 +7,7 @@ Pod::Spec.new do |s|
   s.author           = { 'Alessandro Toschi' => 'ialessandrotoschi@gmail.com' }
   s.source           = { :git => 'https://github.com/AlessandroToschi/MetalViewUI.git' }
   s.ios.deployment_target = '13.0'
+  spec.osx.deployment_target  = '10.15'
   s.swift_version = '5.0'
   s.source_files = 'Sources/MetalViewUI/**/*'
 end
