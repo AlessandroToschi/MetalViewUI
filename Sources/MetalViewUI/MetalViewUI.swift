@@ -2,8 +2,19 @@ import SwiftUI
 import MetalKit
 import Combine
 
-public struct MetalViewUI: UIViewRepresentable {
-    
+#if os(macOS)
+typealias XXViewRepresentable = NSViewRepresentable
+#else
+typealias XXViewRepresentable = UIViewRepresentable
+#endif
+
+public struct MetalViewUI: XXViewRepresentable {
+#if os(macOS)
+    public typealias NSViewType = MTKView
+#else
+    public typealias UIViewType = MTKView
+#endif
+
     public typealias SetNeedsDisplayTrigger = AnyPublisher<Void, Never>
 
     public enum DrawingMode {
@@ -13,8 +24,6 @@ public struct MetalViewUI: UIViewRepresentable {
         
     }
 
-    public typealias UIViewType = MTKView
-    
     private let metalDevice: MTLDevice?
     private weak var renderer: MTKViewDelegate?
     
@@ -41,12 +50,24 @@ public struct MetalViewUI: UIViewRepresentable {
         return metalView
     }
     
+#if os(macOS)
+    public func makeNSView(context: Context) -> MTKView {
+        makeUIView(context: context)
+    }
+#endif
+    
     public func updateUIView(_ uiView: MTKView, context: Context) {
         
         context.coordinator.metalView.apply(context.environment)
         context.coordinator.setNeedsDisplayTrigger = context.environment.setNeedsDisplayTrigger
         print("UPDATE VIEW")
     }
+    
+#if os(macOS)
+    public func updateNSView(_ nsView: MTKView, context: Context) {
+        updateUIView(nsView, context: context)
+    }
+#endif
     
     public class Coordinator {
         
@@ -67,7 +88,11 @@ public struct MetalViewUI: UIViewRepresentable {
                           self.metalView.enableSetNeedsDisplay
                     else { return }
                     
+#if os(macOS)
+                    self.metalView.setNeedsDisplay(self.metalView.bounds)
+#else
                     self.metalView.setNeedsDisplay()
+#endif
                     
                 }
                 

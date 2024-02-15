@@ -13,6 +13,10 @@ private struct ColorPixelFormatKey: EnvironmentKey {
     static let defaultValue: MTLPixelFormat = .bgra8Unorm
 }
 
+private struct DepthStencilPixelFormatKey: EnvironmentKey {
+    static let defaultValue: MTLPixelFormat = .invalid
+}
+
 private struct FramebufferOnlyKey: EnvironmentKey {
     static let defaultValue: Bool = true
 }
@@ -54,6 +58,11 @@ extension EnvironmentValues {
     var colorPixelFormat: MTLPixelFormat {
         get { self[ColorPixelFormatKey.self] }
         set { self[ColorPixelFormatKey.self] = newValue }
+    }
+    
+    var depthStencilPixelFormat: MTLPixelFormat {
+        get { self[DepthStencilPixelFormatKey.self] }
+        set { self[DepthStencilPixelFormatKey.self] = newValue }
     }
     
     var framebufferOnly: Bool {
@@ -107,6 +116,10 @@ public extension View {
     
     func colorPixelFormat(_ value: MTLPixelFormat) -> some View {
         self.environment(\.colorPixelFormat, value)
+    }
+
+    func depthStencilPixelFormat(_ value: MTLPixelFormat) -> some View {
+        self.environment(\.depthStencilPixelFormat, value)
     }
 
     func framebufferOnly(_ value: Bool) -> some View {

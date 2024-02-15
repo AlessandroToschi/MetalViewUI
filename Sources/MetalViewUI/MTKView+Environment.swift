@@ -14,6 +14,7 @@ extension MTKView {
     func apply(_ environment: EnvironmentValues) -> Self {
 
         self.colorPixelFormat = environment.colorPixelFormat
+        self.depthStencilPixelFormat = environment.depthStencilPixelFormat
         self.framebufferOnly = environment.framebufferOnly
         if let drawableSize = environment.drawableSize {
             self.drawableSize = drawableSize
